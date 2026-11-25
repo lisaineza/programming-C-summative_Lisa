@@ -1,0 +1,37 @@
+System health report
+Generated : 2026-11-25 13:04:28
+Hostname  : DESKTOP-EVM2T23
+Kernel    : 6.18.58.1-microsoft-standard-WSL2
+Uptime    : up 39 minutes
+
+CPU
+Usage     : 0% (threshold 80%)
+Status    : OK
+
+Memory
+Total     : 7880 MB
+Used      : 540 MB
+Available : 7340 MB
+Usage     : 6% (threshold 80%)
+Status    : OK
+
+Disk (threshold 80%)
+FILESYSTEM                   SIZE     USED     AVAIL    USE%   MOUNT
+none                         3.9G     0        3.9G     0%     /usr/lib/modules/6.18.58.1-microsoft-standard-WSL2
+/dev/sdb                     97M      97M      0        100%   /usr/src/linux-headers-6.18.58.1-microsoft-standard-WSL2  WARNING
+drivers                      225G     222G     3.9G     99%    /usr/lib/wsl/drivers  WARNING
+/dev/sdd                     1007G    5.4G     951G     1%     /
+none                         3.9G     0        3.9G     0%     /usr/lib/wsl/lib
+rootfs                       3.9G     3.4M     3.9G     1%     /init
+none                         3.9G     80K      3.9G     1%     /mnt/wslg/versions.txt
+none                         3.9G     80K      3.9G     1%     /mnt/wslg/doc
+C:\                          225G     222G     3.9G     99%    /mnt/c  WARNING
+D:\                          252G     7.6G     244G     4%     /mnt/d
+
+Top 5 processes by CPU
+PID      NAME                 CPU%
+1        systemd              0.1
+2354     systemd-udevd        0.0
+220      dbus-daemon          0.0
+11075    bash                 0.0
+2414     systemd-resolve      0.0

@@ -27,3 +27,7 @@
 [2026-11-25 13:00:46] [WARN] Terminate rejected: invalid PID 'y'
 [2026-11-25 13:01:09] [WARN] Terminate blocked: protected process systemd (PID 1)
 [2026-11-25 13:01:24] [INFO] Application exited
+[2026-11-25 13:03:53] [INFO] Application started
+[2026-11-25 13:04:10] [INFO] Report cancelled: directory /mnt/c/Users/hp/C-summative/programming-C-summative_Lisa/project2-health-monitor/reports not created
+[2026-11-25 13:04:28] [INFO] Generated health report: /mnt/c/Users/hp/C-summative/programming-C-summative_Lisa/project2-health-monitor/reports/health_report_20261125_130427.txt
+[2026-11-25 13:05:38] [INFO] Application exited

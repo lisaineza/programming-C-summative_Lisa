@@ -354,7 +354,100 @@ terminate_process() {
         log_activity "ERROR" "kill failed for $name (PID $pid)"
     fi
 }
+generate_report() {
+    require_cmd free || return
+    require_cmd df || return
+    require_cmd ps || return
 
+    local default_dir dir stamp file cpu total used available mem_percent
+    default_dir="$(dirname "$LOG_FILE")/reports"
+
+    read -rp "Directory to save the report [default: $default_dir]: " dir
+    dir="${dir:-$default_dir}"
+    dir="${dir/#\~/$HOME}"
+
+    if [ ! -d "$dir" ]; then
+        if confirm "Directory '$dir' does not exist. Create it?"; then
+            if ! mkdir -p "$dir" 2>/dev/null; then
+                echo "Could not create '$dir'. Check the path and your permissions."
+                log_activity "ERROR" "Report failed: cannot create directory $dir"
+                return
+            fi
+        else
+            echo "Cancelled."
+            log_activity "INFO" "Report cancelled: directory $dir not created"
+            return
+        fi
+    fi
+
+    if [ ! -w "$dir" ]; then
+        echo "Permission denied: cannot write to '$dir'."
+        log_activity "ERROR" "Report failed: no write access to $dir"
+        return
+    fi
+
+    stamp=$(date '+%Y%m%d_%H%M%S')
+    file="$dir/health_report_${stamp}.txt"
+
+    echo "Collecting system data..."
+    cpu=$(get_cpu_usage)
+    read -r total used available < <(free -m | awk '/^Mem:/ {print $2, $3, $7}')
+
+    if [ -z "$total" ] || [ "$total" -le 0 ]; then
+        echo "Could not read memory information."
+        log_activity "ERROR" "Report failed: no memory data"
+        return
+    fi
+    mem_percent=$(( (total - available) * 100 / total ))
+
+    if ! {
+        echo "System health report"
+        echo "Generated : $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "Hostname  : $(hostname)"
+        echo "Kernel    : $(uname -r)"
+        echo "Uptime    : $(uptime -p 2>/dev/null || uptime)"
+        echo ""
+        echo "CPU"
+        echo "Usage     : ${cpu}% (threshold ${CPU_THRESHOLD}%)"
+        if [ "$cpu" -ge "$CPU_THRESHOLD" ]; then
+            echo "Status    : WARNING, above threshold"
+        else
+            echo "Status    : OK"
+        fi
+        echo ""
+        echo "Memory"
+        echo "Total     : ${total} MB"
+        echo "Used      : ${used} MB"
+        echo "Available : ${available} MB"
+        echo "Usage     : ${mem_percent}% (threshold ${MEM_THRESHOLD}%)"
+        if [ "$mem_percent" -ge "$MEM_THRESHOLD" ]; then
+            echo "Status    : WARNING, above threshold"
+        else
+            echo "Status    : OK"
+        fi
+        echo ""
+        echo "Disk (threshold ${DISK_THRESHOLD}%)"
+        printf "%-28s %-8s %-8s %-8s %-6s %s\n" "FILESYSTEM" "SIZE" "USED" "AVAIL" "USE%" "MOUNT"
+        df -hP -x tmpfs -x devtmpfs -x squashfs 2>/dev/null | tail -n +2 | \
+            awk -v t="$DISK_THRESHOLD" '{
+                use = $5; sub(/%/, "", use)
+                flag = (use + 0 >= t) ? "  WARNING" : ""
+                printf "%-28s %-8s %-8s %-8s %-6s %s%s\n", $1, $2, $3, $4, $5, $6, flag
+            }'
+        echo ""
+        echo "Top 5 processes by CPU"
+        printf "%-8s %-20s %s\n" "PID" "NAME" "CPU%"
+        ps -eo pid,comm,%cpu --sort=-%cpu --no-headers | head -5 | \
+            awk '{printf "%-8s %-20s %s\n", $1, $2, $3}'
+    } > "$file"; then
+        echo "Failed to write the report file."
+        log_activity "ERROR" "Report failed: could not write $file"
+        return
+    fi
+
+    echo "Report saved to: $file"
+    log_activity "INFO" "Generated health report: $file"
+}
 show_menu() {
     echo ""
     echo "System Health Monitor"
@@ -385,7 +478,8 @@ main() {
             4) monitor_disk; pause ;;
             5) process_menu; pause ;;
             6) terminate_process; pause ;;
-            7|8|9) echo "Not built yet."; pause ;;
+            7) generate_report; pause ;;
+            8|9) echo "Not built yet."; pause ;;
             *) echo "Invalid choice. Enter a number from 0 to 9."
                log_activity "WARN" "Invalid menu choice: '$choice'" ;;
         esac
