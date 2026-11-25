@@ -264,6 +264,96 @@ process_menu() {
         esac
     done
 }
+# system processes that must never be terminated
+PROTECTED_NAMES="init systemd kthreadd sshd dbus-daemon cron rsyslogd systemd-journal systemd-logind systemd-udevd NetworkManager"
+
+# true if the process is protected: low PIDs, kernel threads, this script, its parent, or a listed name
+is_protected_process() {
+    local pid="$1" name ppid entry
+    name=$(ps -p "$pid" -o comm= 2>/dev/null)
+    ppid=$(ps -p "$pid" -o ppid= 2>/dev/null | tr -d ' ')
+
+    [ "$pid" -le 2 ] && return 0
+    [ "$ppid" = "2" ] && return 0
+    [ "$pid" = "$$" ] && return 0
+    [ "$pid" = "$PPID" ] && return 0
+    for entry in $PROTECTED_NAMES; do
+        [ "$name" = "$entry" ] && return 0
+    done
+    return 1
+}
+
+# ask a yes/no question, return success only on y or yes
+confirm() {
+    local answer
+    read -rp "$1 [y/N]: " answer
+    [[ "$answer" =~ ^[Yy]([Ee][Ss])?$ ]]
+}
+
+terminate_process() {
+    require_cmd ps || return
+    require_cmd kill || return
+
+    local pid name owner
+    read -rp "Enter the PID to terminate: " pid
+
+    if ! [[ "$pid" =~ ^[0-9]+$ ]] || [ "$pid" -le 0 ]; then
+        echo "Invalid PID. Enter a positive whole number."
+        log_activity "WARN" "Terminate rejected: invalid PID '$pid'"
+        return
+    fi
+
+    if ! ps -p "$pid" >/dev/null 2>&1; then
+        echo "No process with PID $pid exists."
+        log_activity "WARN" "Terminate rejected: PID $pid not found"
+        return
+    fi
+
+    name=$(ps -p "$pid" -o comm= | tr -d ' ')
+    owner=$(ps -p "$pid" -o user= | tr -d ' ')
+
+    echo ""
+    ps -p "$pid" -o pid=,user=,comm=,%cpu=,%mem= | print_process_rows
+
+    if is_protected_process "$pid"; then
+        echo "Refused: '$name' (PID $pid) is a protected process."
+        log_activity "WARN" "Terminate blocked: protected process $name (PID $pid)"
+        return
+    fi
+
+    if [ "$owner" != "$(id -un)" ] && [ "$(id -u)" -ne 0 ]; then
+        echo "Permission denied: PID $pid belongs to '$owner'."
+        log_activity "WARN" "Terminate blocked: no permission for $name (PID $pid, owner $owner)"
+        return
+    fi
+
+    if ! confirm "Terminate $name (PID $pid)?"; then
+        echo "Cancelled."
+        log_activity "INFO" "Terminate cancelled for $name (PID $pid)"
+        return
+    fi
+
+    if kill -15 "$pid" 2>/dev/null; then
+        sleep 1
+        if ps -p "$pid" >/dev/null 2>&1; then
+            echo "Process is still running after a normal terminate."
+            if confirm "Force kill PID $pid?"; then
+                kill -9 "$pid" 2>/dev/null
+                sleep 1
+            fi
+        fi
+        if ps -p "$pid" >/dev/null 2>&1; then
+            echo "Process $pid is still running."
+            log_activity "ERROR" "Failed to terminate $name (PID $pid)"
+        else
+            echo "Process $name (PID $pid) terminated."
+            log_activity "INFO" "Terminated process $name (PID $pid)"
+        fi
+    else
+        echo "Could not signal PID $pid."
+        log_activity "ERROR" "kill failed for $name (PID $pid)"
+    fi
+}
 
 show_menu() {
     echo ""
@@ -294,7 +384,8 @@ main() {
             3) monitor_memory; pause ;;
             4) monitor_disk; pause ;;
             5) process_menu; pause ;;
-            6|7|8|9) echo "Not built yet."; pause ;;
+            6) terminate_process; pause ;;
+            7|8|9) echo "Not built yet."; pause ;;
             *) echo "Invalid choice. Enter a number from 0 to 9."
                log_activity "WARN" "Invalid menu choice: '$choice'" ;;
         esac
