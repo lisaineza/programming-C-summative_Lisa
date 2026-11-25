@@ -170,6 +170,44 @@ monitor_memory() {
         awk '{printf "%-8s %-20s %s\n", $1, $2, $3}'
 }
 
+monitor_disk() {
+    require_cmd df || return
+
+    DISK_THRESHOLD=$(prompt_threshold "disk" "$DISK_THRESHOLD")
+
+    # skip virtual filesystems, keep real mounted storage
+    local disk_data
+    disk_data=$(df -hP -x tmpfs -x devtmpfs -x squashfs 2>/dev/null | tail -n +2)
+
+    if [ -z "$disk_data" ]; then
+        echo "Could not read disk information."
+        log_activity "ERROR" "Disk monitoring failed: no data from df"
+        return
+    fi
+
+    echo ""
+    echo "Disk utilization"
+    printf "%-28s %-8s %-8s %-8s %-6s %s\n" "FILESYSTEM" "SIZE" "USED" "AVAIL" "USE%" "MOUNT"
+    echo "$disk_data" | awk '{printf "%-28s %-8s %-8s %-8s %-6s %s\n", $1, $2, $3, $4, $5, $6}'
+    log_activity "INFO" "Viewed disk utilization (threshold ${DISK_THRESHOLD}%)"
+
+    echo ""
+    echo "Filesystems at or above ${DISK_THRESHOLD}%"
+    local full
+    full=$(echo "$disk_data" | awk -v t="$DISK_THRESHOLD" '
+        { use = $5; sub(/%/, "", use)
+          if (use + 0 >= t) printf "%s mounted on %s is %s full\n", $1, $6, $5 }')
+
+    if [ -z "$full" ]; then
+        echo "None"
+    else
+        echo "$full"
+        echo "$full" | while read -r line; do
+            log_activity "WARN" "Disk threshold exceeded: $line"
+        done
+    fi
+}
+
 show_menu() {
     echo ""
     echo "System Health Monitor"
@@ -197,7 +235,8 @@ main() {
             0) log_activity "INFO" "Application exited"; echo "Goodbye."; exit 0 ;;
             2) monitor_cpu; pause ;;
             3) monitor_memory; pause ;;
-            4|5|6|7|8|9) echo "Not built yet."; pause ;;
+            4) monitor_disk; pause ;;
+            5|6|7|8|9) echo "Not built yet."; pause ;;
             *) echo "Invalid choice. Enter a number from 0 to 9."
                log_activity "WARN" "Invalid menu choice: '$choice'" ;;
         esac

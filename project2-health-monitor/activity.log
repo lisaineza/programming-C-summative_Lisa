@@ -11,3 +11,9 @@
 [2026-11-25 12:44:06] [INFO] Application started
 [2026-11-25 12:44:25] [INFO] Memory usage 6% (threshold 80%)
 [2026-11-25 12:45:42] [INFO] Application exited
+[2026-11-25 12:49:03] [INFO] Application started
+[2026-11-25 12:49:10] [INFO] Viewed disk utilization (threshold 80%)
+[2026-11-25 12:49:10] [WARN] Disk threshold exceeded: /dev/sdb mounted on /usr/src/linux-headers-6.18.58.1-microsoft-standard-WSL2 is 100% full
+[2026-11-25 12:49:10] [WARN] Disk threshold exceeded: drivers mounted on /usr/lib/wsl/drivers is 99% full
+[2026-11-25 12:49:10] [WARN] Disk threshold exceeded: C:\ mounted on /mnt/c is 99% full
+[2026-11-25 12:49:53] [INFO] Application exited
