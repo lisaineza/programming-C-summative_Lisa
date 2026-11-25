@@ -131,6 +131,45 @@ monitor_cpu() {
     fi
 }
 
+monitor_memory() {
+    require_cmd free || return
+
+    MEM_THRESHOLD=$(prompt_threshold "memory" "$MEM_THRESHOLD")
+
+    local total used available percent
+    read -r total used available < <(free -m | awk '/^Mem:/ {print $2, $3, $7}')
+
+    if [ -z "$total" ] || [ "$total" -le 0 ]; then
+        echo "Could not read memory information."
+        log_activity "ERROR" "Memory monitoring failed: no data from free"
+        return
+    fi
+
+    percent=$(( (total - available) * 100 / total ))
+
+    echo ""
+    echo "Memory utilization"
+    echo "Total      : ${total} MB"
+    echo "Used       : ${used} MB"
+    echo "Available  : ${available} MB"
+    echo "Utilization: ${percent}%"
+    echo "Threshold  : ${MEM_THRESHOLD}%"
+    log_activity "INFO" "Memory usage ${percent}% (threshold ${MEM_THRESHOLD}%)"
+
+    if [ "$percent" -ge "$MEM_THRESHOLD" ]; then
+        echo "WARNING: memory utilization is above the threshold."
+        log_activity "WARN" "Memory usage ${percent}% exceeds threshold ${MEM_THRESHOLD}%"
+    else
+        echo "Memory utilization is within the normal range."
+    fi
+
+    echo ""
+    echo "Top 5 processes by memory"
+    printf "%-8s %-20s %s\n" "PID" "NAME" "MEM%"
+    ps -eo pid,comm,%mem --sort=-%mem --no-headers | head -5 | \
+        awk '{printf "%-8s %-20s %s\n", $1, $2, $3}'
+}
+
 show_menu() {
     echo ""
     echo "System Health Monitor"
@@ -157,7 +196,8 @@ main() {
             1) show_system_info; pause ;;
             0) log_activity "INFO" "Application exited"; echo "Goodbye."; exit 0 ;;
             2) monitor_cpu; pause ;;
-            3|4|5|6|7|8|9) echo "Not built yet."; pause ;;
+            3) monitor_memory; pause ;;
+            4|5|6|7|8|9) echo "Not built yet."; pause ;;
             *) echo "Invalid choice. Enter a number from 0 to 9."
                log_activity "WARN" "Invalid menu choice: '$choice'" ;;
         esac

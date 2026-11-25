@@ -8,3 +8,6 @@
 [2026-11-25 12:39:10] [WARN] Invalid menu choice: 'abc'
 [2026-11-25 12:39:14] [WARN] Invalid menu choice: '27'
 [2026-11-25 12:39:17] [INFO] Application exited
+[2026-11-25 12:44:06] [INFO] Application started
+[2026-11-25 12:44:25] [INFO] Memory usage 6% (threshold 80%)
+[2026-11-25 12:45:42] [INFO] Application exited
