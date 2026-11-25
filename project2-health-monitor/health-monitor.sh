@@ -207,6 +207,63 @@ monitor_disk() {
         done
     fi
 }
+# print process rows in a fixed-width table
+print_process_rows() {
+    printf "%-8s %-12s %-20s %-6s %s\n" "PID" "USER" "NAME" "CPU%" "MEM%"
+    awk '{printf "%-8s %-12s %-20s %-6s %s\n", $1, $2, $3, $4, $5}'
+}
+
+list_processes() {
+    echo ""
+    echo "Running processes (top 20 by CPU)"
+    ps -eo pid=,user=,comm=,%cpu=,%mem= --sort=-%cpu | head -20 | print_process_rows
+    log_activity "INFO" "Listed running processes"
+}
+
+search_process() {
+    local term results
+    read -rp "Enter process name or PID: " term
+
+    if [ -z "$term" ]; then
+        echo "Search term cannot be empty."
+        return
+    fi
+
+    if [[ "$term" =~ ^[0-9]+$ ]]; then
+        results=$(ps -p "$term" -o pid=,user=,comm=,%cpu=,%mem= 2>/dev/null)
+    else
+        results=$(ps -eo pid=,user=,comm=,%cpu=,%mem= | \
+            awk -v t="$term" 'index(tolower($3), tolower(t)) > 0')
+    fi
+
+    if [ -z "$results" ]; then
+        echo "No process found matching '$term'."
+        log_activity "WARN" "Process search found nothing for '$term'"
+        return
+    fi
+
+    echo ""
+    echo "$results" | print_process_rows
+    log_activity "INFO" "Searched processes for '$term'"
+}
+
+process_menu() {
+    require_cmd ps || return
+    while true; do
+        echo ""
+        echo "Process viewer"
+        echo "1. List running processes"
+        echo "2. Search by name or PID"
+        echo "0. Back to main menu"
+        read -rp "Choose an option [0-2]: " sub
+        case "$sub" in
+            1) list_processes ;;
+            2) search_process ;;
+            0) return ;;
+            *) echo "Invalid choice. Enter 0, 1 or 2." ;;
+        esac
+    done
+}
 
 show_menu() {
     echo ""
@@ -236,7 +293,8 @@ main() {
             2) monitor_cpu; pause ;;
             3) monitor_memory; pause ;;
             4) monitor_disk; pause ;;
-            5|6|7|8|9) echo "Not built yet."; pause ;;
+            5) process_menu; pause ;;
+            6|7|8|9) echo "Not built yet."; pause ;;
             *) echo "Invalid choice. Enter a number from 0 to 9."
                log_activity "WARN" "Invalid menu choice: '$choice'" ;;
         esac
