@@ -448,6 +448,56 @@ generate_report() {
     echo "Report saved to: $file"
     log_activity "INFO" "Generated health report: $file"
 }
+view_activity_log() {
+    if [ ! -f "$LOG_FILE" ]; then
+        echo "No activity log found."
+        return
+    fi
+    if [ ! -r "$LOG_FILE" ]; then
+        echo "Permission denied: cannot read the activity log."
+        return
+    fi
+    if [ ! -s "$LOG_FILE" ]; then
+        echo "The activity log is empty."
+        return
+    fi
+
+    local total count
+    total=$(wc -l < "$LOG_FILE")
+    read -rp "How many recent entries to show? [Enter for all $total]: " count
+
+    echo ""
+    if [ -z "$count" ]; then
+        cat "$LOG_FILE"
+    elif [[ "$count" =~ ^[0-9]+$ ]] && [ "$count" -gt 0 ]; then
+        tail -n "$count" "$LOG_FILE"
+    else
+        echo "Invalid number. Showing all entries."
+        echo ""
+        cat "$LOG_FILE"
+    fi
+    log_activity "INFO" "Viewed activity log"
+}
+
+clear_activity_log() {
+    if [ ! -s "$LOG_FILE" ]; then
+        echo "The activity log is already empty."
+        return
+    fi
+    if [ ! -w "$LOG_FILE" ]; then
+        echo "Permission denied: cannot modify the activity log."
+        return
+    fi
+
+    if confirm "Clear the entire activity log? This cannot be undone."; then
+        : > "$LOG_FILE"
+        log_activity "INFO" "Activity log cleared by user"
+        echo "Activity log cleared."
+    else
+        echo "Cancelled."
+        log_activity "INFO" "Clear activity log cancelled"
+    fi
+}
 show_menu() {
     echo ""
     echo "System Health Monitor"
@@ -479,7 +529,8 @@ main() {
             5) process_menu; pause ;;
             6) terminate_process; pause ;;
             7) generate_report; pause ;;
-            8|9) echo "Not built yet."; pause ;;
+            8) view_activity_log; pause ;;
+            9) clear_activity_log; pause ;;
             *) echo "Invalid choice. Enter a number from 0 to 9."
                log_activity "WARN" "Invalid menu choice: '$choice'" ;;
         esac
