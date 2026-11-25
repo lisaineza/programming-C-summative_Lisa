@@ -62,6 +62,75 @@ show_system_info() {
     log_activity "INFO" "Viewed system information"
 }
 
+# overall CPU usage in percent, measured over one second
+get_cpu_usage() {
+    local user nice system idle iowait irq softirq steal
+    local total1 idle1 total2 idle2 dtotal didle
+
+    read -r _ user nice system idle iowait irq softirq steal _ < /proc/stat
+    total1=$((user + nice + system + idle + iowait + irq + softirq + steal))
+    idle1=$((idle + iowait))
+
+    sleep 1
+
+    read -r _ user nice system idle iowait irq softirq steal _ < /proc/stat
+    total2=$((user + nice + system + idle + iowait + irq + softirq + steal))
+    idle2=$((idle + iowait))
+
+    dtotal=$((total2 - total1))
+    didle=$((idle2 - idle1))
+
+    if [ "$dtotal" -le 0 ]; then
+        echo 0
+    else
+        echo $(( (dtotal - didle) * 100 / dtotal ))
+    fi
+}
+
+monitor_cpu() {
+    if [ ! -r /proc/stat ]; then
+        echo "Cannot read /proc/stat on this system."
+        log_activity "ERROR" "CPU monitoring failed: /proc/stat unreadable"
+        return
+    fi
+    require_cmd ps || return
+
+    CPU_THRESHOLD=$(prompt_threshold "CPU" "$CPU_THRESHOLD")
+
+    echo ""
+    echo "Measuring CPU usage..."
+    local usage
+    usage=$(get_cpu_usage)
+    echo "CPU usage      : ${usage}%"
+    echo "CPU threshold  : ${CPU_THRESHOLD}%"
+    log_activity "INFO" "CPU usage ${usage}% (threshold ${CPU_THRESHOLD}%)"
+
+    if [ "$usage" -ge "$CPU_THRESHOLD" ]; then
+        echo "WARNING: CPU usage is above the threshold."
+        log_activity "WARN" "CPU usage ${usage}% exceeds threshold ${CPU_THRESHOLD}%"
+    else
+        echo "CPU usage is within the normal range."
+    fi
+
+    echo ""
+    echo "Top 5 processes by CPU"
+    printf "%-8s %-20s %s\n" "PID" "NAME" "CPU%"
+    ps -eo pid,comm,%cpu --sort=-%cpu --no-headers | head -5 | \
+        awk '{printf "%-8s %-20s %s\n", $1, $2, $3}'
+
+    echo ""
+    echo "Processes above ${CPU_THRESHOLD}% CPU"
+    local heavy
+    heavy=$(ps -eo pid,comm,%cpu --sort=-%cpu --no-headers | \
+        awk -v t="$CPU_THRESHOLD" '$3 + 0 >= t {printf "%-8s %-20s %s\n", $1, $2, $3}')
+    if [ -z "$heavy" ]; then
+        echo "None"
+    else
+        echo "$heavy"
+        log_activity "WARN" "Processes above ${CPU_THRESHOLD}% CPU detected"
+    fi
+}
+
 show_menu() {
     echo ""
     echo "System Health Monitor"
@@ -87,7 +156,8 @@ main() {
         case "$choice" in
             1) show_system_info; pause ;;
             0) log_activity "INFO" "Application exited"; echo "Goodbye."; exit 0 ;;
-            2|3|4|5|6|7|8|9) echo "Not built yet."; pause ;;
+            2) monitor_cpu; pause ;;
+            3|4|5|6|7|8|9) echo "Not built yet."; pause ;;
             *) echo "Invalid choice. Enter a number from 0 to 9."
                log_activity "WARN" "Invalid menu choice: '$choice'" ;;
         esac

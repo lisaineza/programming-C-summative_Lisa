@@ -3,3 +3,8 @@
 [2026-11-25 12:27:47] [WARN] Invalid menu choice: 'abs'
 [2026-11-25 12:27:52] [WARN] Invalid menu choice: '12'
 [2026-11-25 12:28:08] [INFO] Application exited
+[2026-11-25 12:37:28] [INFO] Application started
+[2026-11-25 12:38:03] [INFO] CPU usage 0% (threshold 70%)
+[2026-11-25 12:39:10] [WARN] Invalid menu choice: 'abc'
+[2026-11-25 12:39:14] [WARN] Invalid menu choice: '27'
+[2026-11-25 12:39:17] [INFO] Application exited
