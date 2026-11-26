@@ -1,0 +1,5 @@
+The Internet of Things connects everyday devices.
+IoT devices collect sensor data in real time.
+Smart homes rely on IoT hubs and cloud services.
+Security is a major concern for any iot deployment.
+This line has no match.

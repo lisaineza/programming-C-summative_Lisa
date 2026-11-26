@@ -1,0 +1,4 @@
+Cities use sensors to manage traffic and energy.
+An IoT gateway can forward IoT readings to the cloud.
+Farmers monitor soil moisture with low-power devices.
+IOT adoption is growing across Africa.
