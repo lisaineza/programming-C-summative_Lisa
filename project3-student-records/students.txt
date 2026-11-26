@@ -1,5 +1,8 @@
 SARS_DATA_V1
-1
+2
 1021|Lisa Ineza|Mubangizi|Computer science|3|2
 CS209|Data structures 2|250.00|270.00
 MATHEMATICS|MAT105|67.00|100.00
+1234|Lia|Isaro|Software Eng|2|2
+MAT100|Maths|230.00|240.00
+SNG|Software engineering|100.00|200.00

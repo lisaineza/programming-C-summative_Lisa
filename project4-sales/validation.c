@@ -110,3 +110,105 @@ void read_text(const char *prompt, char *dest, size_t size) {
         }
     }
 }
+
+/* true if s is a real calendar date written as YYYY-MM-DD */
+int is_valid_date(const char *s) {
+    static const int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int i, year, month, day, max_day;
+
+    if (strlen(s) != 10) {
+        return 0;
+    }
+    for (i = 0; i < 10; i++) {
+        if (i == 4 || i == 7) {
+            if (s[i] != '-') {
+                return 0;
+            }
+        } else if (!isdigit((unsigned char)s[i])) {
+            return 0;
+        }
+    }
+
+    year = atoi(s);
+    month = atoi(s + 5);
+    day = atoi(s + 8);
+    if (year < 1900 || year > 2100 || month < 1 || month > 12) {
+        return 0;
+    }
+
+    max_day = days_in_month[month - 1];
+    if (month == 2 && ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)) {
+        max_day = 29;
+    }
+    return day >= 1 && day <= max_day;
+}
+
+/* keep asking until the user enters a valid date */
+void read_date(const char *prompt, char *dest, size_t size) {
+    char buf[64];
+
+    while (1) {
+        if (!read_line(prompt, buf, sizeof(buf))) {
+            exit_on_eof();
+        }
+        trim(buf);
+        if (is_valid_date(buf) && strlen(buf) < size) {
+            strcpy(dest, buf);
+            return;
+        }
+        printf("Invalid date. Use YYYY-MM-DD, for example 2025-03-14.\n");
+    }
+}
+
+/* ask a yes/no question; returns 1 for yes and 0 for no */
+int read_yes_no(const char *prompt) {
+    char buf[16];
+
+    while (1) {
+        if (!read_line(prompt, buf, sizeof(buf))) {
+            exit_on_eof();
+        }
+        trim(buf);
+        if (equals_ignore_case(buf, "y") || equals_ignore_case(buf, "yes")) {
+            return 1;
+        }
+        if (equals_ignore_case(buf, "n") || equals_ignore_case(buf, "no")) {
+            return 0;
+        }
+        printf("Please answer y or n.\n");
+    }
+}
+
+/* case-insensitive string equality */
+int equals_ignore_case(const char *a, const char *b) {
+    while (*a != '\0' && *b != '\0') {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b)) {
+            return 0;
+        }
+        a++;
+        b++;
+    }
+    return *a == *b;
+}
+
+/* case-insensitive check that part appears somewhere inside text */
+int contains_ignore_case(const char *text, const char *part) {
+    size_t i;
+    size_t n = strlen(part);
+
+    if (n == 0) {
+        return 1;
+    }
+    for (; *text != '\0'; text++) {
+        for (i = 0; i < n; i++) {
+            if (text[i] == '\0' ||
+                tolower((unsigned char)text[i]) != tolower((unsigned char)part[i])) {
+                break;
+            }
+        }
+        if (i == n) {
+            return 1;
+        }
+    }
+    return 0;
+}

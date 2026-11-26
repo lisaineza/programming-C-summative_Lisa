@@ -1,2 +1,15 @@
 [2026-11-25 13:08:21] [INFO] Activity log cleared by user
 [2026-11-25 13:08:34] [INFO] Application exited
+[2026-11-26 23:54:45] [INFO] Application started
+[2026-11-27 00:44:34] [INFO] Memory usage 7% (threshold 80%)
+[2026-11-27 00:45:13] [INFO] Viewed disk utilization (threshold 80%)
+[2026-11-27 00:45:13] [WARN] Disk threshold exceeded: /dev/sdb mounted on /usr/src/linux-headers-6.18.58.1-microsoft-standard-WSL2 is 100% full
+[2026-11-27 00:45:13] [WARN] Disk threshold exceeded: drivers mounted on /usr/lib/wsl/drivers is 100% full
+[2026-11-27 00:45:13] [WARN] Disk threshold exceeded: C:\ mounted on /mnt/c is 100% full
+[2026-11-27 00:45:53] [INFO] Generated health report: /mnt/c/Users/hp/C-summative/programming-C-summative_Lisa/project2-health-monitor/reports/health_report_20261127_004552.txt
+[2026-11-27 00:46:37] [INFO] Viewed disk utilization (threshold 80%)
+[2026-11-27 00:46:37] [WARN] Disk threshold exceeded: /dev/sdb mounted on /usr/src/linux-headers-6.18.58.1-microsoft-standard-WSL2 is 100% full
+[2026-11-27 00:46:37] [WARN] Disk threshold exceeded: drivers mounted on /usr/lib/wsl/drivers is 100% full
+[2026-11-27 00:46:37] [WARN] Disk threshold exceeded: C:\ mounted on /mnt/c is 100% full
+[2026-11-27 00:47:31] [INFO] Viewed activity log
+[2026-11-27 00:47:50] [INFO] Application exited

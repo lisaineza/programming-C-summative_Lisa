@@ -1,9 +1,9 @@
 Document analysis report
 
 Input file        : document1.txt
-Search keyword    : IoT
+Search keyword    : missing.txt
 Total lines       : 5
-Total occurrences : 3
-Matching lines    : 3
-Line numbers      : 2, 3, 4
+Total occurrences : 0
+Matching lines    : 0
+Line numbers      : none
 Status            : Successful
