@@ -1,0 +1,27 @@
+
+ACADEMIC PERFORMANCE REPORT
+
+1. GENERAL SUMMARY
+   Total registered students        : 1
+   Total course registrations       : 2
+   Students with courses (assessed) : 1
+   Overall average performance      : 79.80%
+
+2. TOP AND BOTTOM PERFORMERS
+   Highest average : Lisa Ineza Mubangizi (ID 1021), 79.80%
+   Lowest average  : Lisa Ineza Mubangizi (ID 1021), 79.80%
+
+3. PASS / FAIL SUMMARY (pass = at least 50% of maximum marks)
+   Students passing (average >= 50%) : 1
+   Students failing (average < 50%)  : 0
+   Students not yet assessed         : 0
+   Course results passed / failed    : 2 / 0
+
+4. AVERAGE PERFORMANCE PER COURSE
+   Code       Course name                    Students   Average  Pass rate
+   CS209      Data structures 2                     1    92.59%    100.00%
+   MATHEMATICS MAT105                                1    67.00%    100.00%
+
+5. STUDENTS PER PROGRAMME
+   Computer science                         : 1
+
