@@ -1,0 +1,5 @@
+SARS_DATA_V1
+1
+1021|Lisa Ineza|Mubangizi|Computer science|3|2
+CS209|Data structures 2|250.00|270.00
+MATHEMATICS|MAT105|67.00|100.00
